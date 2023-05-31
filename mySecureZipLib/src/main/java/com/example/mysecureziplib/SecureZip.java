@@ -25,6 +25,8 @@ import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
 
@@ -160,9 +162,10 @@ public class SecureZip {
     }
 
     public static String generatePassword() {
+        UniformRandomProvider rng = RandomSource.create(RandomSource.MT);
         RandomStringGenerator generator = new RandomStringGenerator.Builder()
                 .withinRange('0', 'z') // Set the range from '0' to 'z'
-                .filteredBy(CharacterPredicates.LETTERS, CharacterPredicates.DIGITS) // Include letters and digits
+                .filteredBy(CharacterPredicates.LETTERS, CharacterPredicates.DIGITS).usingRandom(rng::nextInt) // Include letters and digits
                 .build();
 
         return generator.generate(5);
