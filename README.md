@@ -12,4 +12,4 @@ There is an app demo that can give you an example on how to use the library
 <img src="https://github.com/Gabriel-Gershberg-Dev/SecureZipCreator/assets/64218293/b915a8b9-de22-443a-a1c9-d2672915f200" width="300" height="600">
 
 
-![Homepage]()
+
