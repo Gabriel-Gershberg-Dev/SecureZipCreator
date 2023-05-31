@@ -49,7 +49,7 @@ import okhttp3.Response;
 
 public class SecureZip {
 
-    private  Context context;
+    private Context context;
     private ZipFile zipFile;
     private String zipPassword;
     private ArrayList<String> allowedPhoneNumbers;
@@ -58,20 +58,20 @@ public class SecureZip {
     public static final String AUTH_TOKEN = "c3ef4f5fd543236110df440a4c3d0c13";
     private String zipFileName;
 
-    public SecureZip(Context context){
-        this.context=context;
-        allowedPhoneNumbers=new ArrayList<>();
-        zipFileName="CompressedZip";
+    public SecureZip(Context context) {
+        this.context = context;
+        allowedPhoneNumbers = new ArrayList<>();
+        zipFileName = "CompressedZip";
     }
 
 
-    public void createZipWithPassword( List<Uri> urisToAdd) throws IOException {
+    public void createZipWithPassword(List<Uri> urisToAdd) throws IOException {
         ZipParameters zipParameters = new ZipParameters();
         zipParameters.setEncryptFiles(true);
         zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-        String password= generatePassword();
-        String filePath= "/data/user/0/com.example.securezip/files/" + zipFileName + ".zip";
-        File checkIfExists= new File(filePath);
+        String password = generatePassword();
+        String filePath = "/data/user/0/com.example.securezip/files/" + zipFileName + ".zip";
+        File checkIfExists = new File(filePath);
         if (checkIfExists.exists())
             checkIfExists.delete();
 
@@ -88,7 +88,7 @@ public class SecureZip {
                     // Add the temporary file to the list
                     filesToAdd.add(tempFile);
 
-                 ;
+                    ;
                 }
                 zipFile.addFiles(filesToAdd, zipParameters);
                 tempFile.delete();
@@ -100,7 +100,7 @@ public class SecureZip {
         }
     }
 
-    private  File createCopyFileFromUri(Uri uri) throws IOException {
+    private File createCopyFileFromUri(Uri uri) throws IOException {
         // Get the file name and extension from the URI
         String fileName = getFileNameFromUri(uri);
 
@@ -121,7 +121,8 @@ public class SecureZip {
 
         return outputFile;
     }
-    private  String getFileNameFromUri(Uri uri) {
+
+    private String getFileNameFromUri(Uri uri) {
         String fileName = null;
         if (uri.getScheme().equals("content")) {
             Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
@@ -140,20 +141,20 @@ public class SecureZip {
     }
 
 
-    public  void sendFile(File file, String messageTitle) {
-             String textToMail = "Attached File:\n";
-             Uri fileUri = FileProvider.getUriForFile(context, "com.example.securezip.fileprovider", file);
-            final Intent messageIntent = new Intent(Intent.ACTION_SEND);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                messageIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
-            messageIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            messageIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-            messageIntent.putExtra(Intent.EXTRA_TEXT, textToMail + "\n\n\nSecuredZip");
-            messageIntent.putExtra(Intent.EXTRA_CC, new String[]{""});
-            messageIntent.setData(Uri.parse("mailto:")); // or just "mailto:" for blank
-            messageIntent.setType("text/html");
-            context.startActivity(Intent.createChooser(messageIntent,messageTitle));
+    public void sendFile(File file, String messageTitle) {
+        String textToMail = "Attached File:\n";
+        Uri fileUri = FileProvider.getUriForFile(context, "com.example.securezip.fileprovider", file);
+        final Intent messageIntent = new Intent(Intent.ACTION_SEND);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            messageIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        messageIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        messageIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+        messageIntent.putExtra(Intent.EXTRA_TEXT, textToMail + "\n\n\nSecuredZip");
+        messageIntent.putExtra(Intent.EXTRA_CC, new String[]{""});
+        messageIntent.setData(Uri.parse("mailto:")); // or just "mailto:" for blank
+        messageIntent.setType("text/html");
+        context.startActivity(Intent.createChooser(messageIntent, messageTitle));
 
 
     }
@@ -167,67 +168,65 @@ public class SecureZip {
         return generator.generate(5);
     }
 
+    public boolean checkFileExists(){
+        return zipFile!=null;
+    }
+    public void sendPasswordBySms(String phoneNumber) {
+        OkHttpClient client = new OkHttpClient();
 
+        String url = "https://api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages";
 
-            public void sendPasswordBySms(String phoneNumber) {
+        String base64EncodedCredentials = "Basic " + Base64.encodeToString((ACCOUNT_SID + ":" + AUTH_TOKEN).getBytes(), Base64.NO_WRAP);
 
-                    OkHttpClient client = new OkHttpClient();
+        RequestBody body = new FormBody.Builder()
+                .add("From", "+13156233129") // Replace with your Twilio phone number
+                .add("To", phoneNumber)
+                .add("Body", "Your secret password is: " + zipPassword)
+                .build();
 
-                    String url = "https://api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages";
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .header("Authorization", base64EncodedCredentials)
+                .build();
 
-                    String base64EncodedCredentials = "Basic " + Base64.encodeToString((ACCOUNT_SID + ":" + AUTH_TOKEN).getBytes(), Base64.NO_WRAP);
-
-                    RequestBody body = new FormBody.Builder()
-                            .add("From", "+13156233129") // Replace with your Twilio phone number
-                            .add("To", phoneNumber)
-                            .add("Body", "Your secret password is: " + zipPassword)
-                            .build();
-
-                    Request request = new Request.Builder()
-                            .url(url)
-                            .post(body)
-                            .header("Authorization", base64EncodedCredentials)
-                            .build();
-
-                    client.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            e.printStackTrace();
-                            // Handle failure
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            if (response.isSuccessful()) {
-                                System.out.println("SMS sent successfully!");
-                                // Handle successful response
-                            } else {
-                                System.out.println("Failed to send SMS: " + response.code() + " - " + response.message());
-                                // Handle unsuccessful response
-                            }
-                            response.close();
-                        }
-                    });
-
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+                // Handle failure
             }
 
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    System.out.println("SMS sent successfully!");
+                    // Handle successful response
+                } else {
+                    System.out.println("Failed to send SMS: " + response.code() + " - " + response.message());
+                    // Handle unsuccessful response
+                }
+                response.close();
+            }
+        });
 
-
-
-
-
-    public  void sendCompressedFile( String messageTitle) {
-        sendFile(zipFile.getFile(),messageTitle);
     }
-    public void setZipFileName(String fileName){
-            this.zipFileName=fileName;
+
+
+    public void sendCompressedFile(String messageTitle) {
+        sendFile(zipFile.getFile(), messageTitle);
     }
 
-    public void addAllowedPhoneNumber(String phoneNumber){
+    public void setZipFileName(String fileName) {
+        this.zipFileName = fileName;
+    }
+
+    public void addAllowedPhoneNumber(String phoneNumber) {
         allowedPhoneNumbers.add(phoneNumber);
     }
-    public void setNewPassword(String zipPassword){
-        this.zipPassword=zipPassword;
+
+    public void setNewPassword(String zipPassword) {
+        this.zipPassword = zipPassword;
     }
 
 }

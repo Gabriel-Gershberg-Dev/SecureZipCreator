@@ -36,31 +36,37 @@ public class MainActivity extends AppCompatActivity {
         context=getApplicationContext();
         findViews();
         secureZip=new SecureZip(this);
-        secureZip.addAllowedPhoneNumber("+972584234444");
+
         setClickListeners();
-        
+
 
     }
 
-    private void setClickListeners(){
+    private void setClickListeners() {
         chooseFiles.setOnClickListener(v -> fileChooser());
 
         sendPasswordSmsBtu.setOnClickListener(v -> {
-            PhoneNumberDialog phoneNumberDialog = new PhoneNumberDialog(MainActivity.this);
-            phoneNumberDialog.setOnDismissListener(dialog -> {
-                String phoneNumber = phoneNumberDialog.getPhoneNumber();
-                secureZip.sendPasswordBySms(phoneNumber);
-            });
-            phoneNumberDialog.show();
-        });
-        exportBtu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                secureZip.sendCompressedFile("My secured file");
-            }
-        });
-    }
+            if (secureZip.checkFileExists()) {
+                PhoneNumberDialog phoneNumberDialog = new PhoneNumberDialog(MainActivity.this);
+                phoneNumberDialog.setOnDismissListener(dialog -> {
+                    String phoneNumber = phoneNumberDialog.getPhoneNumber();
+                    secureZip.sendPasswordBySms(phoneNumber);
+                });
+                phoneNumberDialog.show();
+            } else
+                Toast.makeText(this, "Please choose files and create zip first", Toast.LENGTH_LONG).show();
 
+        });
+
+        exportBtu.setOnClickListener(v -> {
+            if (secureZip.checkFileExists()) {
+                    secureZip.sendCompressedFile("My secured zip file");
+            } else
+                Toast.makeText(this, "Please choose files and create zip first", Toast.LENGTH_LONG).show();
+
+        });
+
+    }
     private void fileChooser() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");  // Set the MIME type to allow all file types
