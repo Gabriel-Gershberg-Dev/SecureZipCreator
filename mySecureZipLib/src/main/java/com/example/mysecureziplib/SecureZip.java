@@ -172,46 +172,49 @@ public class SecureZip {
         return zipFile!=null;
     }
     public void sendPasswordBySms(String phoneNumber) {
-        OkHttpClient client = new OkHttpClient();
+        if (phoneNumber != null) {
+            OkHttpClient client = new OkHttpClient();
 
-        String url = "https://api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages";
+            String url = "https://api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages";
 
-        String base64EncodedCredentials = "Basic " + Base64.encodeToString((ACCOUNT_SID + ":" + AUTH_TOKEN).getBytes(), Base64.NO_WRAP);
+            String base64EncodedCredentials = "Basic " + Base64.encodeToString((ACCOUNT_SID + ":" + AUTH_TOKEN).getBytes(), Base64.NO_WRAP);
 
-        RequestBody body = new FormBody.Builder()
-                .add("From", "+13156233129") // Replace with your Twilio phone number
-                .add("To", phoneNumber)
-                .add("Body", "Your secret password is: " + zipPassword)
-                .build();
+            RequestBody body = new FormBody.Builder()
+                    .add("From", "+13156233129") // Replace with your Twilio phone number
+                    .add("To", phoneNumber)
+                    .add("Body", "Your secret password is: " + zipPassword)
+                    .build();
 
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .header("Authorization", base64EncodedCredentials)
-                .build();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .header("Authorization", base64EncodedCredentials)
+                    .build();
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-                // Handle failure
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    System.out.println("SMS sent successfully!");
-                    // Handle successful response
-                } else {
-                    System.out.println("Failed to send SMS: " + response.code() + " - " + response.message());
-                    // Handle unsuccessful response
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                    // Handle failure
                 }
-                response.close();
-            }
-        });
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        System.out.println("SMS sent successfully!");
+                        // Handle successful response
+                    } else {
+                        System.out.println("Failed to send SMS: " + response.code() + " - " + response.message());
+                        // Handle unsuccessful response
+                    }
+                    response.close();
+                }
+            });
+
+        } else
+            Toast.makeText(context, "Please enter a valid phone number", Toast.LENGTH_LONG).show();
 
     }
-
 
     public void sendCompressedFile(String messageTitle) {
         sendFile(zipFile.getFile(), messageTitle);
