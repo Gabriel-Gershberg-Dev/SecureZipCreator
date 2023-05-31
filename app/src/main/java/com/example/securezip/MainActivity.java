@@ -36,8 +36,10 @@ public class MainActivity extends AppCompatActivity {
         context=getApplicationContext();
         findViews();
         secureZip=new SecureZip(this);
-
+      //secureZip.setACCOUNT_SID( "Your account_sid"); provide your Twilio account_sid
+      //secureZip.setAUTH_TOKEN("Your token"); provide your Twilio token
         setClickListeners();
+
 
 
     }
@@ -61,12 +63,12 @@ public class MainActivity extends AppCompatActivity {
         exportBtu.setOnClickListener(v -> {
             if (secureZip.checkFileExists()) {
                     secureZip.sendCompressedFile("My secured zip file");
-            } else
-                Toast.makeText(this, "Please choose files and create zip first", Toast.LENGTH_LONG).show();
+            }
 
         });
 
     }
+
     private void fileChooser() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");  // Set the MIME type to allow all file types

@@ -54,8 +54,8 @@ public class SecureZip {
     private String zipPassword;
     private ArrayList<String> allowedPhoneNumbers;
     private boolean allowedToSeePass;
-    public static final String ACCOUNT_SID = "AC74810519b11fec1fa8efa7152fb04cf6";
-    public static final String AUTH_TOKEN = "c3ef4f5fd543236110df440a4c3d0c13";
+    public  String ACCOUNT_SID;
+    public  String AUTH_TOKEN;
     private String zipFileName;
 
     public SecureZip(Context context) {
@@ -168,56 +168,74 @@ public class SecureZip {
         return generator.generate(5);
     }
 
-    public boolean checkFileExists(){
-        return zipFile!=null;
-    }
+
     public void sendPasswordBySms(String phoneNumber) {
-        if (phoneNumber != null) {
-            OkHttpClient client = new OkHttpClient();
+        if(AUTH_TOKEN!=null&& ACCOUNT_SID!=null) {
+            if (phoneNumber != null) {
+                OkHttpClient client = new OkHttpClient();
 
-            String url = "https://api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages";
+                String url = "https://api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages";
 
-            String base64EncodedCredentials = "Basic " + Base64.encodeToString((ACCOUNT_SID + ":" + AUTH_TOKEN).getBytes(), Base64.NO_WRAP);
+                String base64EncodedCredentials = "Basic " + Base64.encodeToString((ACCOUNT_SID + ":" + AUTH_TOKEN).getBytes(), Base64.NO_WRAP);
 
-            RequestBody body = new FormBody.Builder()
-                    .add("From", "+13156233129") // Replace with your Twilio phone number
-                    .add("To", phoneNumber)
-                    .add("Body", "Your secret password is: " + zipPassword)
-                    .build();
+                RequestBody body = new FormBody.Builder()
+                        .add("From", "+13156233129") // Replace with your Twilio phone number
+                        .add("To", phoneNumber)
+                        .add("Body", "Your secret password is: " + zipPassword)
+                        .build();
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
-                    .header("Authorization", base64EncodedCredentials)
-                    .build();
+                Request request = new Request.Builder()
+                        .url(url)
+                        .post(body)
+                        .header("Authorization", base64EncodedCredentials)
+                        .build();
 
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    e.printStackTrace();
-                    // Handle failure
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        System.out.println("SMS sent successfully!");
-                        // Handle successful response
-                    } else {
-                        System.out.println("Failed to send SMS: " + response.code() + " - " + response.message());
-                        // Handle unsuccessful response
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        e.printStackTrace();
+                        // Handle failure
                     }
-                    response.close();
-                }
-            });
 
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        if (response.isSuccessful()) {
+                            System.out.println("SMS sent successfully!");
+                            // Handle successful response
+                        } else {
+                            System.out.println("Failed to send SMS: " + response.code() + " - " + response.message());
+                            // Handle unsuccessful response
+                        }
+                        response.close();
+                    }
+                });
+
+            } else
+                Toast.makeText(context, "Please enter a valid phone number", Toast.LENGTH_LONG).show();
         } else
-            Toast.makeText(context, "Please enter a valid phone number", Toast.LENGTH_LONG).show();
-
+            Toast.makeText(context, "Error: Twilio token don't exists, provide token and try again", Toast.LENGTH_LONG).show();
+    }
+    public boolean checkFileExists(){
+        if(zipFile!=null)
+            return true;
+        else {
+            Toast.makeText(context, "Please choose files and create zip first", Toast.LENGTH_LONG).show();
+            return false;
+        }
     }
 
     public void sendCompressedFile(String messageTitle) {
         sendFile(zipFile.getFile(), messageTitle);
+    }
+
+    public SecureZip setACCOUNT_SID(String ACCOUNT_SID) {
+        this.ACCOUNT_SID = ACCOUNT_SID;
+        return this;
+    }
+
+    public SecureZip setAUTH_TOKEN(String AUTH_TOKEN) {
+        this.AUTH_TOKEN = AUTH_TOKEN;
+        return this;
     }
 
     public void setZipFileName(String fileName) {
